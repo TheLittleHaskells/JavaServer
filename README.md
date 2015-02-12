@@ -1,2 +1,2 @@
 # JavaServer
-CMPE150 Chat Server
+CMPS112 Chat Server
