@@ -7,12 +7,88 @@ import java.io.FileReader;
  */
 public class Server {
     static int port;   // port
+    static String[] userlist;
 
     public static void main(String args[]){
-
         // Read in config file
         parseConfig(args[0]);
+    }
 
+    public static void readMessage(String username, String msg){
+        String[] tokens = msg.split("@");
+        String payload = msg.substring(5);
+
+        // List users
+        if(tokens[0].matches("LIST")){
+            updateUserList(payload);
+
+        // Login messages
+        }else if(tokens[0].matches("GTFI")){
+            displayUserLoggedIn(payload);
+
+        // Logoff messages
+        }else if(tokens[0].matches("GTFO")){
+            displayUserLoggedOff(payload);
+
+        // Chat messages
+        }else if(tokens[0].matches("CHAT")){
+            displayChatMessage(username, payload);
+
+        // Other messages
+        }else if(tokens[0].matches("REQU")){
+            // todo: sendUserlist(username);
+
+            // Other messages
+        }else{
+            displayError("Invalid message received: " + msg);
+        }
+    }
+
+    /**
+     * updates the stored list of users
+     *
+     * @param list formatted userlist string (should be delimited by @)
+     */
+    public static void updateUserList(String list){
+        userlist = list.split("@");
+    }
+
+    /**
+     * Displays a message saying a user has logged on.
+     *
+     * @param username username of person who logged in
+     */
+    public static void displayUserLoggedIn(String username){
+        System.out.printf("\n\t%s has logged on.", username);
+        displayPrompt();
+    }
+
+    /**
+     * Displays a message saying a user has logged off.
+     *
+     * @param username username of person who logged off
+     */
+    public static void displayUserLoggedOff(String username){
+        System.out.printf("\n\t%s has logged off.", username);
+        displayPrompt();
+    }
+
+    /**
+     * Displays a message from a user to the screen
+     *
+     * @param username source username
+     * @param message message
+     */
+    public static void displayChatMessage(String username, String message){
+        System.out.printf("\n\t%s: %s", username, message);
+        displayPrompt();
+    }
+
+    /**
+     * displayPrompt shows a newline and a prompt to the user.
+     */
+    public static void displayPrompt(){
+        System.out.printf("\n~> ");
     }
 
     /**
