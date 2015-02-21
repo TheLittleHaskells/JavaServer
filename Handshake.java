@@ -33,7 +33,7 @@ public class Handshake {
             PrintWriter pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
 
             String input = null;
-            while((input = br.readLine()) != null) {
+            while((input = br.readLine()) == null) {
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {
