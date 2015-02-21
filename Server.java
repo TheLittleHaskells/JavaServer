@@ -9,11 +9,21 @@ import java.util.Map;
 public class Server {
     static int port;   // port
     static String[] userlist;
+    static Listener listener;
+    static Thread listenerThread;
 
 
     public static void main(String args[]){
         // Read in config file
         parseConfig(args[0]);
+
+
+        // Start
+        listener = new Listener(port);
+        listenerThread = new Thread(listener);
+        listenerThread.start();
+
+        // start ui stuff
     }
 
     public static void readMessage(String username, String msg){
@@ -36,10 +46,21 @@ public class Server {
         }else if(tokens[0].matches("CHAT")){
             displayChatMessage(username, payload);
 
-        // Other messages
+        // Userlist request messages
         }else if(tokens[0].matches("REQU")){
-            // todo: sendUserlist(username);
-
+            Socket toSendTo = null;
+            for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+                if(entry.getKey().matches(username)){
+                    toSendTo = entry.getValue();
+                    break;
+                }
+            }
+            if(toSendTo == null){
+                displayError("Tried to send a userlist to a user who doens't exist.");
+                return;
+            }
+            String userlistString = generateUserList(listener.getSocketList());
+            sendMessage("LIST", userlistString, toSendTo);
             // Other messages
         }else{
             displayError("Invalid message received: " + msg);

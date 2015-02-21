@@ -9,7 +9,9 @@ import java.util.Map;
  */
 public class Listener implements Runnable{
     int port;
-    volatile static Map<String,Socket> socketList;
+
+
+    volatile static HashMap<String,Socket> socketList;
     ServerSocket listeningServer;
 
     public Listener(int port){
@@ -35,7 +37,10 @@ public class Listener implements Runnable{
     }
 
     public void handle(Socket sockyj){
+        Handshake.serverShake(socketList, sockyj);
+    }
 
-
+    public HashMap<String, Socket> getSocketList() {
+        return socketList;
     }
 }
