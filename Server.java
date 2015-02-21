@@ -1,6 +1,7 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The Server entry point.
@@ -8,6 +9,7 @@ import java.io.FileReader;
 public class Server {
     static int port;   // port
     static String[] userlist;
+
 
     public static void main(String args[]){
         // Read in config file
@@ -90,6 +92,29 @@ public class Server {
     public static void displayPrompt(){
         System.out.printf("\n~> ");
     }
+
+    public static void sendMessage(String type,String payload, Socket client){
+        String message = type + "@" + payload;
+
+        //send message using socket
+        try {
+            PrintWriter pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
+            pw.println(message);
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+
+    }
+
+    public static String generateUserList(HashMap<String,Socket> userMap){
+        String payload ="";
+        for(Map.Entry<String, Socket> entry: userMap.entrySet()) {
+            String user = entry.getKey();
+            payload = payload + "@" + user;
+        }
+        return payload.substring(1);
+    }
+
 
     /**
      * Reads in the config file
