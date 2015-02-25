@@ -34,7 +34,7 @@ public class Server {
                 displayPrompt();
                 input = br.readLine();
                 if(input.matches("/.*")){
-                    processCommand();
+                    processCommand(input.substring(1));
                 }else {
                     // send to all clients here.
                     for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
@@ -48,6 +48,10 @@ public class Server {
                 System.out.println("Something went went.");
             }
         }
+    }
+
+    public static void processCommand(String command){
+
     }
 
     public static void sendMessage(String type,String payload, Socket client){
