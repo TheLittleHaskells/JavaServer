@@ -1,5 +1,7 @@
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,13 +19,47 @@ public class Server {
         // Read in config file
         parseConfig(args[0]);
 
-
         // Start
         listener = new Listener(port);
         listenerThread = new Thread(listener);
         listenerThread.start();
 
+        System.out.printf("Server started and listening on port: %d\n", port);
+
         // start ui stuff
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        String input;
+        while(true){
+            try {
+                displayPrompt();
+                input = br.readLine();
+                if(input.matches("/.*")){
+                    processCommand();
+                }else {
+                    // send to all clients here.
+                    for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+                        Socket toSendTo = entry.getValue();
+                        sendMessage("CHAT", input, toSendTo);
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Something went went.");
+            }
+        }
+    }
+
+    public static void sendMessage(String type,String payload, Socket client){
+        String message = type + "@" + payload;
+
+        //send message using socket
+        try {
+            PrintWriter pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
+            pw.println(message);
+        }catch(IOException e){
+            e.printStackTrace();
+        }
     }
 
     public static void readMessage(String username, String msg){
@@ -41,11 +77,23 @@ public class Server {
         // Logoff messages
         }else if(tokens[0].matches("GTFO")){
             displayUserLoggedOff(payload);
+            try {
+                listener.getSocketList().get(username).close();
+            }catch (Exception e){
+
+            }
+            listener.getSocketList().remove(username);
 
         // Chat messages
         }else if(tokens[0].matches("CHAT")){
             displayChatMessage(username, payload);
-
+            for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+                if(entry.getKey().matches(username)){
+                    Socket toSendTo = entry.getValue();
+                    sendMessage("CHAT", payload, toSendTo);
+                    break;
+                }
+            }
         // Userlist request messages
         }else if(tokens[0].matches("REQU")){
             Socket toSendTo = null;
@@ -112,19 +160,6 @@ public class Server {
      */
     public static void displayPrompt(){
         System.out.printf("\n~> ");
-    }
-
-    public static void sendMessage(String type,String payload, Socket client){
-        String message = type + "@" + payload;
-
-        //send message using socket
-        try {
-            PrintWriter pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
-            pw.println(message);
-        }catch(IOException e){
-            e.printStackTrace();
-        }
-
     }
 
     public static String generateUserList(HashMap<String,Socket> userMap){
