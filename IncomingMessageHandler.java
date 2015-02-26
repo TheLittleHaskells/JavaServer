@@ -25,6 +25,7 @@ public class IncomingMessageHandler implements Runnable{
      */
     @Override
     public void run() {
+        this.running = true;
         while(running){
             for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
                 try {
