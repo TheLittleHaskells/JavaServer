@@ -12,19 +12,26 @@ public class Server {
     static int port;   // port
     static String[] userlist;
     static Listener listener;
+    static IncomingMessageHandler imh;
     static Thread listenerThread;
+    static Thread imhThread;
 
 
     public static void main(String args[]){
         // Read in config file
         parseConfig(args[0]);
 
-        // Start
+        // Start Listener to listen for new connections from clients
         listener = new Listener(port);
         listenerThread = new Thread(listener);
         listenerThread.start();
 
-        System.out.printf("Server started and listening on port: %d\n", port);
+        System.out.printf("Server started and listening for connections on port: %d\n", port);
+
+        // Start incoming message handler
+        imh = new IncomingMessageHandler(listener);
+        imhThread = new Thread(imh);
+        imhThread.start();
 
         // start ui stuff
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -34,7 +41,7 @@ public class Server {
                 displayPrompt();
                 input = br.readLine();
                 if(input.matches("/.*")){
-                    processCommand(input.substring(1));
+                    processCommand(input.substring(1)); // cut off the / and pass to processcommand
                 }else {
                     // send to all clients here.
                     for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
@@ -50,8 +57,16 @@ public class Server {
         }
     }
 
+    /**
+     * Processes a command entered by the user
+     *
+     * @param command The command (expected WITHOUT the /)
+     *
+     * TODO: Code this.
+     */
     public static void processCommand(String command){
-
+        System.out.printf("\nCommand %s entered but not yet implemented.", command);
+        displayPrompt();
     }
 
     public static void sendMessage(String type,String payload, Socket client){
@@ -66,58 +81,6 @@ public class Server {
         }
     }
 
-    public static void readMessage(String username, String msg){
-        String[] tokens = msg.split("@");
-        String payload = msg.substring(5);
-
-        // List users
-        if(tokens[0].matches("LIST")){
-            updateUserList(payload);
-
-        // Login messages
-        }else if(tokens[0].matches("GTFI")){
-            displayUserLoggedIn(payload);
-
-        // Logoff messages
-        }else if(tokens[0].matches("GTFO")){
-            displayUserLoggedOff(payload);
-            try {
-                listener.getSocketList().get(username).close();
-            }catch (Exception e){
-
-            }
-            listener.getSocketList().remove(username);
-
-        // Chat messages
-        }else if(tokens[0].matches("CHAT")){
-            displayChatMessage(username, payload);
-            for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
-                if(entry.getKey().matches(username)){
-                    Socket toSendTo = entry.getValue();
-                    sendMessage("CHAT", payload, toSendTo);
-                    break;
-                }
-            }
-        // Userlist request messages
-        }else if(tokens[0].matches("REQU")){
-            Socket toSendTo = null;
-            for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
-                if(entry.getKey().matches(username)){
-                    toSendTo = entry.getValue();
-                    break;
-                }
-            }
-            if(toSendTo == null){
-                displayError("Tried to send a userlist to a user who doens't exist.");
-                return;
-            }
-            String userlistString = generateUserList(listener.getSocketList());
-            sendMessage("LIST", userlistString, toSendTo);
-            // Other messages
-        }else{
-            displayError("Invalid message received: " + msg);
-        }
-    }
 
     /**
      * updates the stored list of users
@@ -180,7 +143,6 @@ public class Server {
      * Reads in the config file
      *
      * Formatted like <option>=<value>
-     *
      */
     public static void parseConfig(String filename){
         File f = new File(filename);
@@ -217,7 +179,12 @@ public class Server {
         }
     }
 
-    private static void displayError(String s){
+    /**
+     * Shows an error to the screen
+     *
+     * @param s the error message
+     */
+    public static void displayError(String s){
         System.err.println(s);
     }
 }
