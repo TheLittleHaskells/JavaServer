@@ -85,7 +85,8 @@ public class IncomingMessageHandler implements Runnable{
 
             // Chat messages
         }else if(tokens[0].matches("CHAT")){
-            Server.displayChatMessage(username, payload);
+            payload = username + ": " + payload;
+            Server.displayChatMessage(payload);
             for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
                 if(entry.getKey().matches(username)){
                     Socket toSendTo = entry.getValue();

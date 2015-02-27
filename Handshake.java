@@ -47,7 +47,7 @@ public class Handshake {
 
             // Get the port.
             input = null;
-            while((input = br.readLine()) != null) {
+            while((input = br.readLine()) == null) {
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {

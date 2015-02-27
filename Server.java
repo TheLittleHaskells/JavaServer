@@ -117,8 +117,8 @@ public class Server {
      * @param username source username
      * @param message message
      */
-    public static void displayChatMessage(String username, String message){
-        System.out.printf("\n\t%s: %s", username, message);
+    public static void displayChatMessage( String message){
+        System.out.printf("\n\t %s", message);
         displayPrompt();
     }
 
