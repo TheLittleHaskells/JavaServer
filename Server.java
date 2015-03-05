@@ -44,10 +44,15 @@ public class Server {
                     processCommand(input.substring(1)); // cut off the / and pass to processcommand
                 }else {
                     // send to all clients here.
+                    // DEBUG
                     for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+                        System.out.println("debug: ENTRYLIST ITEM: " + entry.getKey());
+                    }
+                    // END DEBUG
+                    for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+                        System.out.println("Hit send server message to " + entry.getKey());
                         Socket toSendTo = entry.getValue();
-                        sendMessage("CHAT", input, toSendTo);
-                        break;
+                        sendMessage("CHAT", "SERVER: " + input, toSendTo);
                     }
                 }
             } catch (IOException e) {
@@ -70,8 +75,8 @@ public class Server {
     }
 
     public static void sendMessage(String type,String payload, Socket client){
+        System.out.println("debug: Sending : " + payload);
         String message = type + "@" + payload;
-
         //send message using socket
         try {
             PrintWriter pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
@@ -114,7 +119,6 @@ public class Server {
     /**
      * Displays a message from a user to the screen
      *
-     * @param username source username
      * @param message message
      */
     public static void displayChatMessage( String message){

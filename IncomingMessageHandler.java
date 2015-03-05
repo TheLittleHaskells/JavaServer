@@ -31,7 +31,8 @@ public class IncomingMessageHandler implements Runnable{
                 try {
                     BufferedReader br = new BufferedReader(new InputStreamReader(entry.getValue().getInputStream()));
                     String input = null;
-                    if((input = br.readLine()) != null){
+
+                    if(br.ready() && (input = br.readLine()) != null){
                         readMessage(entry.getKey(), input);
                     }
                 } catch (IOException e) {
@@ -62,6 +63,7 @@ public class IncomingMessageHandler implements Runnable{
      * @param msg message in string format
      */
     public void readMessage(String username, String msg){
+        System.out.printf("\ndebug: readMessage called with username %s and msg %s", username, msg);
         String[] tokens = msg.split("@");
         String payload = msg.substring(5);
 
@@ -88,7 +90,8 @@ public class IncomingMessageHandler implements Runnable{
             payload = username + ": " + payload;
             Server.displayChatMessage(payload);
             for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
-                if(entry.getKey().matches(username)){
+                System.out.println("Hit relay chat loop with outbound username " + entry.getKey());
+                if(!entry.getKey().matches(username)){
                     Socket toSendTo = entry.getValue();
                     Server.sendMessage("CHAT", payload, toSendTo);
                     break;
