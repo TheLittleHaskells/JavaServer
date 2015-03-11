@@ -88,12 +88,22 @@ public class Server {
 
 
     /**
-     * updates the stored list of users
+     * Sends a string of usernames separated by '@' symbols
      *
-     * @param list formatted userlist string (should be delimited by @)
+     *
      */
-    public static void updateUserList(String list){
-        userlist = list.split("@");
+    public static void sendUserList(String username){
+        String userList = "";
+        for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+            String user = entry.getKey();
+            userList += user + '@';
+        }
+        userList = userList.substring(0,userList.length()-1);
+        //for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+        Socket entry = listener.getSocketList().get(username);
+        sendMessage("LIST",userList,entry);
+        //}
+        //userlist = list.split("@");
     }
 
     /**

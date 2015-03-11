@@ -69,20 +69,38 @@ public class IncomingMessageHandler implements Runnable{
 
         // List users
         if(tokens[0].matches("LIST")){
-            Server.updateUserList(payload);
+            Server.sendUserList(username);
 
             // Login messages
         }else if(tokens[0].matches("GTFI")){
             Server.displayUserLoggedIn(payload);
-
+            payload = username+" has logged on.";
+            for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+                //System.out.println("Hit relay chat loop with outbound username " + entry.getKey());
+                if(!entry.getKey().matches(username)){
+                    Socket toSendTo = entry.getValue();
+                    Server.sendMessage("CHAT", payload, toSendTo);
+                    break;
+                }
+            }
             // Logoff messages
         }else if(tokens[0].matches("GTFO")){
             Server.displayUserLoggedOff(payload);
+            for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+                //System.out.println("Hit relay chat loop with outbound username " + entry.getKey());
+                payload = username+" has logged off.";
+                if(!entry.getKey().matches(username)){
+                    Socket toSendTo = entry.getValue();
+                    Server.sendMessage("CHAT", payload, toSendTo);
+                    break;
+                }
+            }
             try {
                 this.listener.getSocketList().get(username).close();
             }catch (Exception e){
 
             }
+
             this.listener.getSocketList().remove(username);
 
             // Chat messages
