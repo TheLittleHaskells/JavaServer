@@ -66,7 +66,7 @@ public class Handshake {
 
             // Add new socket to map
             socketMap.put(username, newSocket);
-            System.out.println("\nAccepted incoming connection from: " + username + "on port " + newSocket.getPort());
+            System.out.println("\nAccepted incoming connection from: " + username + " on port " + newSocket.getPort());
         } catch (IOException e) {
             e.printStackTrace();
         }

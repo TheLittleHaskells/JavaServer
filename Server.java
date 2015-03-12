@@ -19,9 +19,9 @@ public class Server {
 
     public static void main(String args[]){
         // Read in config file
-        if(args.length != 1){
+        if(args.length == 0 || args.length > 1){
             System.err.println("Usage: JavaServer <config file>");
-            System.exit(-1);
+            System.exit(1);
         }
         parseConfig(args[0]);
 
@@ -41,7 +41,6 @@ public class Server {
             @Override
             public void run(){
                 for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
-                    System.out.println("Hit send server message to " + entry.getKey());
                     Socket toSendTo = entry.getValue();
                     sendMessage("GTFO", "SERVER", toSendTo);
                 }
@@ -77,8 +76,6 @@ public class Server {
      * Processes a command entered by the user
      *
      * @param command The command (expected WITHOUT the /)
-     *
-     * TODO: Code this.
      */
     public static void processCommand(String command){
         String userList;
@@ -98,7 +95,6 @@ public class Server {
         if(command.toLowerCase().matches("quit")){
             System.exit(0);
         }
-        displayPrompt();
     }
 
     public static void sendMessage(String type, String payload, Socket client){
