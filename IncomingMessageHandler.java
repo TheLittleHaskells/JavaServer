@@ -63,7 +63,6 @@ public class IncomingMessageHandler implements Runnable{
      * @param msg message in string format
      */
     public void readMessage(String username, String msg){
-        System.out.printf("\ndebug: readMessage called with username %s and msg %s", username, msg);
         String[] tokens = msg.split("@");
         String payload = msg.substring(5);
 
@@ -80,7 +79,6 @@ public class IncomingMessageHandler implements Runnable{
                 if(!entry.getKey().matches(username)){
                     Socket toSendTo = entry.getValue();
                     Server.sendMessage("CHAT", payload, toSendTo);
-                    break;
                 }
             }
             // Logoff messages
@@ -92,44 +90,25 @@ public class IncomingMessageHandler implements Runnable{
                 if(!entry.getKey().matches(username)){
                     Socket toSendTo = entry.getValue();
                     Server.sendMessage("CHAT", payload, toSendTo);
-                    break;
                 }
             }
             try {
                 this.listener.getSocketList().get(username).close();
+                this.listener.getSocketList().remove(username);
             }catch (Exception e){
-
+                e.printStackTrace();
             }
-
-            this.listener.getSocketList().remove(username);
 
             // Chat messages
         }else if(tokens[0].matches("CHAT")){
             payload = username + ": " + payload;
             Server.displayChatMessage(payload);
             for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
-                System.out.println("Hit relay chat loop with outbound username " + entry.getKey());
                 if(!entry.getKey().matches(username)){
                     Socket toSendTo = entry.getValue();
                     Server.sendMessage("CHAT", payload, toSendTo);
-                    break;
                 }
             }
-            // Userlist request messages
-        }else if(tokens[0].matches("REQU")){
-            Socket toSendTo = null;
-            for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
-                if(entry.getKey().matches(username)){
-                    toSendTo = entry.getValue();
-                    break;
-                }
-            }
-            if(toSendTo == null){
-                Server.displayError("Tried to send a userlist to a user who doens't exist.");
-                return;
-            }
-            String userlistString = Server.generateUserList(listener.getSocketList());
-            Server.sendMessage("LIST", userlistString, toSendTo);
             // Other messages
         }else{
             Server.displayError("Invalid message received: " + msg);

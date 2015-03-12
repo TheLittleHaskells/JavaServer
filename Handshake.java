@@ -3,6 +3,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Handshakes between Client and Server
@@ -12,7 +13,7 @@ public class Handshake {
      * Handshake to be called by server
      *
      */
-    public static void serverShake(HashMap<String, Socket> socketMap, Socket client){
+    public static void serverShake(ConcurrentHashMap<String, Socket> socketMap, Socket client){
         StringWriter sw = new StringWriter();
 
         int i = 0;
@@ -33,7 +34,7 @@ public class Handshake {
             PrintWriter pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
 
             String input = null;
-            while((input = br.readLine()) == null) {
+            while((input = br.readLine()) == null && !input.matches(" ")) {
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {

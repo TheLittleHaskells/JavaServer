@@ -19,6 +19,10 @@ public class Server {
 
     public static void main(String args[]){
         // Read in config file
+        if(args.length != 1){
+            System.err.println("Usage: JavaServer <config file>");
+            System.exit(-1);
+        }
         parseConfig(args[0]);
 
         // Start Listener to listen for new connections from clients
@@ -33,6 +37,17 @@ public class Server {
         imhThread = new Thread(imh);
         imhThread.start();
 
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            @Override
+            public void run(){
+                for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+                    System.out.println("Hit send server message to " + entry.getKey());
+                    Socket toSendTo = entry.getValue();
+                    sendMessage("GTFO", "SERVER", toSendTo);
+                }
+            }
+        });
+
         // start ui stuff
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         String input;
@@ -46,18 +61,14 @@ public class Server {
                     // send to all clients here.
                     // DEBUG
                     for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
-                        System.out.println("debug: ENTRYLIST ITEM: " + entry.getKey());
                     }
                     // END DEBUG
                     for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
-                        System.out.println("Hit send server message to " + entry.getKey());
                         Socket toSendTo = entry.getValue();
                         sendMessage("CHAT", "SERVER: " + input, toSendTo);
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println("Something went went.");
             }
         }
     }
@@ -70,27 +81,51 @@ public class Server {
      * TODO: Code this.
      */
     public static void processCommand(String command){
-        System.out.printf("\nCommand %s entered but not yet implemented.", command);
+        String userList;
+        if(command.toLowerCase().matches("list")){
+            userList = "";
+            if(listener.getSocketList().size() == 0){
+                System.out.println("No users connected.");
+                return;
+            }
+            for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+                String user = entry.getKey();
+                userList += user + ',';
+            }
+            userList = userList.substring(0,userList.length()-1);
+            System.out.printf("\t%s", userList);
+        }
+        if(command.toLowerCase().matches("quit")){
+            System.exit(0);
+        }
         displayPrompt();
     }
 
-    public static void sendMessage(String type,String payload, Socket client){
-        System.out.println("debug: Sending : " + payload);
+    public static void sendMessage(String type, String payload, Socket client){
         String message = type + "@" + payload;
         //send message using socket
         try {
             PrintWriter pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
             pw.println(message);
         }catch(IOException e){
-            e.printStackTrace();
+            String toRemove = null;
+            for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+                if(entry.getValue() == client){
+                    toRemove = entry.getKey();
+                    break;
+                }
+            }
+            System.err.printf("\t%s has disconnected.", toRemove);
+            listener.getSocketList().remove(toRemove);
+            for(Map.Entry<String, Socket> entry : listener.getSocketList().entrySet()){
+                sendMessage("CHAT", toRemove + " has disconnected.", entry.getValue());
+            }
         }
     }
 
 
     /**
      * Sends a string of usernames separated by '@' symbols
-     *
-     *
      */
     public static void sendUserList(String username){
         String userList = "";
